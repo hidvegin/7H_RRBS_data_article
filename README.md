@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/1162721573.svg)](https://doi.org/10.5281/zenodo.18715140)
+
 # RRBS Data Quality & Technical Validation Scripts
 
 **Associated manuscript:** *"Reduced Representation Bisulfite Sequencing (RRBS) dataset of a wheat–barley 7H chromosome addition line"* — submitted to *Scientific Data*.
