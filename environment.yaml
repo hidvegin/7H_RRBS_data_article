@@ -1,0 +1,15 @@
+name: gemini_rrbs
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python>=3.10
+  - pandas
+  - matplotlib
+  - seaborn
+  - numpy
+  - scipy
+  - statsmodels
+  - openpyxl
+  - fastparquet
