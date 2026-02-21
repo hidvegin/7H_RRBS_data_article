@@ -17,7 +17,12 @@ data_analysis/
 ├── da03_correlation_pca.py     # Pairwise sample correlations and chromosome-level PCA
 ├── da04_chromosome_coverage.py # Probe coverage per chromosome per sample
 ├── da05_genomic_features.py    # Genomic feature distribution of differentially methylated probes
-└── README.md
+├── README.md
+└── replicates/
+    ├── CpG_all_replicates.txt  # Raw replicate data — CpG context (9 sample columns)
+    ├── CHG_all_replicates.txt  # Raw replicate data — CHG context (9 sample columns)
+    ├── CHH_all_replicates.txt  # Raw replicate data — CHH context (9 sample columns)
+    └── da06_replicate_validation.py  # Biological replicate reproducibility analysis
 
 # Upstream preprocessing scripts (required to reproduce input files from raw data):
 ../step6_filter_context_files.py   # Filters raw SeqMonk exports (≥2 non-missing samples)
@@ -49,6 +54,26 @@ Tab-separated files containing genome-wide RRBS methylation values (%) for all t
 **Provenance:** Raw SeqMonk exports (`CpG_all.txt`, `CHG_all.txt`, `CHH_all.txt`) were processed by:
 1. `step6_filter_context_files.py` — keeps rows with data in ≥2 samples
 2. `step8_smart_clean.py` — converts non-numeric values to NaN, drops rows where **all three** samples are NaN (preserving biological zeros)
+
+### `replicates/CpG_all_replicates.txt`, `replicates/CHG_all_replicates.txt`, `replicates/CHH_all_replicates.txt`
+*Used by: replicates/da06*
+
+Tab-separated files containing per-replicate RRBS methylation values (%) for nine samples (three biological replicates per genotype). These files must be placed in the `replicates/` subdirectory.
+
+**Column structure:**
+
+| Column | Description |
+|--------|-------------|
+| `Chromosome` | Chromosome identifier (e.g. `1A`, `7H`) |
+| `Start` | Probe start position (0-based) |
+| `End` | Probe end position |
+| `Mv9_1`, `Mv9_2`, `Mv9_3` | Methylation % in *T. aestivum* cv. Mv9, replicates 1–3 |
+| `Igri_1`, `Igri_2`, `Igri_3` | Methylation % in *H. vulgare* cv. Igri, replicates 1–3 |
+| `7Hadd_1`, `7Hadd_2`, `7Hadd_3` | Methylation % in the 7H addition line, replicates 1–3 |
+
+> **Column naming note:** In the CpG file, sample columns use bare filenames (e.g. `7Hadd_1_S7_R1_...`). In the CHG and CHH files, columns carry a context prefix (e.g. `CHG_context_7Hadd_1_S7_R1_...`). The script's `short_name()` function handles both formats automatically via regex, extracting the short label (e.g. `7Hadd_1`) regardless of prefix.
+
+---
 
 ### `filtered_significant_methylation.csv`
 *Used by: da05*
@@ -106,6 +131,13 @@ python da05_genomic_features.py
 
 # Option B: direct path to interpreter (no activation needed)
 /path/to/envs/gemini_rrbs/bin/python da01_data_quality.py
+```
+
+The replicate validation script (`da06`) must be run from the `replicates/` subdirectory:
+
+```bash
+cd data_analysis/replicates/
+/path/to/envs/gemini_rrbs/bin/python da06_replicate_validation.py
 ```
 
 Scripts are independent and can be run in any order. No script modifies the input files.
@@ -171,6 +203,28 @@ Analyses the distribution of significant DMPs across annotated genomic regions (
 | `hyper_hypo_breakdown.csv` | Hyper/hypo counts per genome × context × region |
 | `hyper_hypo_barplot.png` | Stacked bar chart of hyper/hypo counts |
 | `hyper_hypo_barplot.svg` | Vector format |
+
+---
+
+### `replicates/da06_replicate_validation.py`
+Assesses biological replicate reproducibility across all three methylation contexts. Applies genotype-specific chromosome filtering before all analyses (Mv9: wheat chromosomes 1A–7D only; Igri: barley chromosomes 1H–7H only; 7Hadd: wheat chromosomes + 7H only, excluding 1H–6H cross-mapping artefacts). Computes all 36 pairwise Pearson and Spearman correlations using only chromosomes shared between each sample pair, then performs chromosome-level PCA (mean methylation per chromosome per context as features, avoiding the site-level sparsity inherent to comparing different genome compositions).
+
+Must be run **from the `replicates/` subdirectory**.
+
+```bash
+cd data_analysis/replicates/
+/Users/thusor/mamba/envs/gemini_rrbs/bin/python da06_replicate_validation.py
+```
+
+| Output file | Description |
+|-------------|-------------|
+| `replicate_correlation_summary.csv` | Pearson & Spearman r for all 36 sample pairs, with comparison type (within/between genotype) and chromosome set used |
+| `replicate_correlation_heatmap.png` | 9×9 annotated correlation heatmap per context, with within-genotype blocks outlined — raster format, 180 dpi |
+| `replicate_correlation_heatmap.svg` | Vector format |
+| `replicate_pca.png` | Chromosome-level PCA of 9 samples with genotype cluster shading — raster format, 180 dpi |
+| `replicate_pca.svg` | Vector format |
+
+**Key results:** CpG within-genotype Pearson r = 0.906 (range 0.857–0.960); CHG r = 0.760 (range 0.669–0.861); CHH r = 0.025 (biologically expected — CHH methylation is stochastic via the RdDM pathway). Within-genotype r exceeds between-genotype r for CpG and CHG, confirming that biological signal exceeds technical noise. Replicate PCA: PC1 = 67.7%, PC2 = 26.2%; replicates cluster tightly within genotype.
 
 ---
 
