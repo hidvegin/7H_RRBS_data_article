@@ -18,11 +18,7 @@ data_analysis/
 ├── da04_chromosome_coverage.py # Probe coverage per chromosome per sample
 ├── da05_genomic_features.py    # Genomic feature distribution of differentially methylated probes
 ├── README.md
-└── replicates/
-    ├── CpG_all_replicates.txt  # Raw replicate data — CpG context (9 sample columns)
-    ├── CHG_all_replicates.txt  # Raw replicate data — CHG context (9 sample columns)
-    ├── CHH_all_replicates.txt  # Raw replicate data — CHH context (9 sample columns)
-    └── da06_replicate_validation.py  # Biological replicate reproducibility analysis
+└── da06_replicate_validation.py  # Biological replicate reproducibility analysis
 
 # Upstream preprocessing scripts (required to reproduce input files from raw data):
 ../step6_filter_context_files.py   # Filters raw SeqMonk exports (≥2 non-missing samples)
